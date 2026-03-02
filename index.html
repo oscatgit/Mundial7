@@ -67,4 +67,56 @@
     </a-scene>
 
     <script>
-      const btn = document.getElementById('
+      const btn = document.getElementById('start-btn');
+      const stopBtn = document.getElementById('stop-btn');
+      const videos = [];
+      for(let i=0; i<7; i++) { videos.push(document.getElementById(`v${i}`)); }
+
+      AFRAME.registerComponent('video-refresh', {
+        tick: function () {
+          const mesh = this.el.getObject3D('mesh');
+          if (mesh && mesh.material && mesh.material.map) {
+            mesh.material.map.needsUpdate = true;
+          }
+        }
+      });
+
+      btn.addEventListener('click', () => {
+        document.getElementById('overlay').style.display = 'none';
+        stopBtn.style.display = 'block'; // Mostrar botón detener
+        document.querySelector('a-scene').systems["mindar-image-system"].start();
+
+        videos.forEach((v, index) => {
+          v.muted = false; 
+          v.play().then(() => {
+            v.pause();
+            v.currentTime = 0;
+          });
+          document.getElementById(`p${index}`).setAttribute('video-refresh', '');
+        });
+      });
+
+      // NUEVO: Lógica del botón Detener
+      stopBtn.addEventListener('click', () => {
+        // Detener el sistema de MindAR (apaga la cámara)
+        document.querySelector('a-scene').systems["mindar-image-system"].stop();
+        
+        // Pausar todos los videos
+        videos.forEach(v => {
+          v.pause();
+          v.currentTime = 0;
+        });
+
+        // Restaurar la UI inicial
+        stopBtn.style.display = 'none';
+        document.getElementById('overlay').style.display = 'flex';
+      });
+
+      for(let i=0; i<7; i++) {
+        const target = document.getElementById(`target${i}`);
+        target.addEventListener("targetFound", () => { videos[i].play(); });
+        target.addEventListener("targetLost", () => { videos[i].pause(); });
+      }
+    </script>
+  </body>
+</html>
